@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+  --color-landingPageBg: #f1eae3;
+  --color-primary: #651fff;
+  --color-secondary: #ff5a16;
+  --color-textgrey: #374251;
+  --color-bordcolor: #9933b147;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+@font-face {
+  font-family: "Euclid Circular B";
+  src: url("/fonts/EuclidCircularB-Regular.woff2") format("woff2"),
+    url("/fonts/EuclidCircularB-Regular.woff") format("woff");
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin 8s linear infinite;
+}
