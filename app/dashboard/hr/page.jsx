@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 const initialEmployees = [
   {
     id: "E001",
-    name: "Asha Rao",
+    name: "Ashaa Rao",
     email: "asha.rao@example.com",
     role: "Software Engineer",
     status: "Active",
