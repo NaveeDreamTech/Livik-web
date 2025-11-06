@@ -6,6 +6,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata = {
   title: "Livik Technologies",
   description: "Smart, scalable, and secure digital products",
+  icons: {
+    icon: "/asset/livik-logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {
