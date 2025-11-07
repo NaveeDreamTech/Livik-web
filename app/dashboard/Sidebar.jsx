@@ -1,4 +1,3 @@
-// app/dashboard/Sidebar.jsx
 "use client";
 
 import Link from "next/link";
@@ -6,13 +5,24 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback } from "react";
 
+// Import Lucide React icons
+import {
+  HomeIcon,
+  UsersIcon,
+  CreditCardIcon,
+  ArchiveIcon,
+  SettingsIcon,
+  UserCircle2Icon,
+  LogOutIcon,
+} from "lucide-react";
+
 const navItems = [
-  { id: "index", title: "Dashboard", href: "/dashboard" },
-  { id: "hr", title: "HR Module", href: "/dashboard/hr" },
-  { id: "payroll", title: "Payroll", href: "/dashboard/payroll" },
-  { id: "asset", title: "Asset Tracking", href: "/dashboard/asset" },
-  { id: "admin", title: "Admin Panel", href: "/dashboard/admin" },
-  { id: "employee-portal", title: "Employee Portal", href: "/dashboard/employee_portal" },
+  { id: "index", title: "Dashboard", href: "/dashboard", icon: <HomeIcon size={20} /> },
+  { id: "hr", title: "HR Module", href: "/dashboard/hr", icon: <UsersIcon size={20} /> },
+  { id: "payroll", title: "Payroll", href: "/dashboard/payroll", icon: <CreditCardIcon size={20} /> },
+  { id: "asset", title: "Asset Tracking", href: "/dashboard/asset", icon: <ArchiveIcon size={20} /> },
+  { id: "admin", title: "Admin Panel", href: "/dashboard/admin", icon: <SettingsIcon size={20} /> },
+  { id: "employee-portal", title: "Employee Portal", href: "/dashboard/employee_portal", icon: <UserCircle2Icon size={20} /> },
 ];
 
 export default function Sidebar() {
@@ -25,43 +35,35 @@ export default function Sidebar() {
   }, [router]);
 
   const renderNavItem = (item) => {
-    // Highlight logic
-    let isActive = false;
-    if (item.href === "/dashboard") {
-      isActive = pathname === "/dashboard";
-    } else {
-      isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-    }
+    const isActive =
+      item.href === "/dashboard"
+        ? pathname === "/dashboard"
+        : pathname === item.href || pathname.startsWith(item.href + "/");
 
     const baseClasses =
-      "flex items-center gap-3 text-sm px-3 py-2 rounded-md transition-all duration-150";
-    const activeClasses = "bg-[#1E90FF] text-white font-medium shadow-sm";
-    const inactiveClasses = "text-gray-700 hover:bg-gray-100";
+      "flex items-center gap-3 px-5 py-3 rounded-3xl font-semibold text-base transition-colors duration-200";
+    const activeClasses = "bg-blue-600 text-white shadow-md shadow-blue-400/40";
+    const inactiveClasses = "text-gray-700 hover:text-blue-600 hover:bg-blue-50";
 
     return (
       <Link
         key={item.id}
         href={item.href}
-        className={`${baseClasses} ${
-          isActive ? activeClasses : inactiveClasses
-        }`}
+        className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
       >
-        <span
-          className={`w-2 h-2 rounded-full ${
-            isActive ? "bg-white" : "bg-gray-400"
-          }`}
-          aria-hidden
-        />
+        <span aria-hidden className="flex items-center justify-center">
+          {item.icon}
+        </span>
         <span>{item.title}</span>
       </Link>
     );
   };
 
   return (
-    <div className="flex flex-col h-full p-6">
+    <div className="flex flex-col h-full p-6 bg-white rounded-lg shadow-md border border-gray-200">
       {/* Logo section */}
       <div className="mb-8 flex justify-center">
-        <div className="w-[240px] h-[80px] shadow-[0_6px_18px_rgba(0,0,0,0.08)] overflow-hidden bg-white flex items-center justify-center">
+        <div className="w-[240px] h-[80px] bg-blue-100 rounded-md shadow flex items-center justify-center">
           <Image
             src="/asset/Livik_Logo.png"
             alt="Livik Logo"
@@ -75,19 +77,16 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-auto">
-        <ul className="flex flex-col gap-2">
-          {navItems.map((item) => (
-            <li key={item.id}>{renderNavItem(item)}</li>
-          ))}
-        </ul>
+        <ul className="flex flex-col gap-4">{navItems.map(renderNavItem)}</ul>
       </nav>
 
       {/* Logout button */}
       <div className="mt-8">
         <button
           onClick={handleLogout}
-          className="w-full text-sm bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 transition-all duration-150"
+          className="w-full flex items-center justify-center gap-2 text-base bg-red-600 text-white px-5 py-3 rounded-3xl font-semibold hover:bg-red-700 transition-colors duration-200"
         >
+          <LogOutIcon size={20} />
           Logout
         </button>
       </div>

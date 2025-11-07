@@ -14,17 +14,14 @@ export default function DashboardLayout({ children }) {
       </aside>
 
       {/* Main area */}
-      <main className="flex-1 h-screen overflow-auto p-8">
-        {/* content wrapper gives a clear card that stands out from the gray page bg */}
+      <main className="flex-1 h-screen overflow-auto p-4">
         <div className="max-w-full mx-auto">
           <div className="bg-transparent">
-            {/* card that holds page content — ensures contrast even if inner pages
-                themselves use white blocks; this makes hierarchy clear */}
-            <div className="bg-gray-50 p-6 rounded-xl">
-              <div className="bg-white rounded-2xl shadow-md p-6">
+            
+              <div className="bg-gray-300 rounded-2xl shadow-md p-6">
                 {children}
               </div>
-            </div>
+            
           </div>
         </div>
       </main>
