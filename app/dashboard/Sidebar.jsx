@@ -41,7 +41,7 @@ export default function Sidebar() {
         : pathname === item.href || pathname.startsWith(item.href + "/");
 
     const baseClasses =
-      "flex items-center gap-3 px-5 py-3 rounded-3xl font-semibold text-base transition-colors duration-200";
+      "flex items-center gap-3 px-3 py-3 rounded-3xl font-semibold text-base transition-colors duration-200";
     const activeClasses = "bg-blue-600 text-white shadow-md shadow-blue-400/40";
     const inactiveClasses = "text-gray-700 hover:text-blue-600 hover:bg-blue-50";
 
@@ -60,10 +60,10 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="flex flex-col h-full p-6 bg-white rounded-lg shadow-md border border-gray-200">
+    <div className="flex flex-col h-full p-3 bg-white rounded-lg shadow-md border border-gray-200">
       {/* Logo section */}
       <div className="mb-8 flex justify-center">
-        <div className="w-[240px] h-[80px] bg-blue-100 rounded-md shadow flex items-center justify-center">
+        <div className="w-[220px] h-[80px] bg-blue-100 rounded-md shadow flex items-center justify-center">
           <Image
             src="/asset/Livik_Logo.png"
             alt="Livik Logo"

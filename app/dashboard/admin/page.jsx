@@ -173,17 +173,6 @@ export default function AdminPage() {
             Manage admins, users and module-level permissions.
           </p>
         </div>
-
-        <div className="flex items-center gap-4">
-          <div className="text-sm text-gray-600">Users</div>
-          <div className="bg-white px-3 py-1 rounded-full shadow text-sm font-medium">
-            {users.length}
-          </div>
-          <div className="text-sm text-gray-600">Employees</div>
-          <div className="bg-white px-3 py-1 rounded-full shadow text-sm font-medium">
-            {employees.length}
-          </div>
-        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm p-6">

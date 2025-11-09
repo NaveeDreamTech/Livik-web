@@ -1,14 +1,25 @@
 // app/dashboard/hr/page.jsx
 "use client";
 
-import { useMemo, useState } from "react";
-import Button from "../../components/Button";
+import { useMemo, useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
 import CustomTable from "../../components/CustomTable";
 import CustomModalForm from "../../components/CustomModalForm";
+import EmployeeForm from "../../components/EmployeeForm";
 import Header from "../../components/Header";
 import EmployeeActions from "../../components/EmployeeActions";
 import ApprovalCard from "../../components/ApprovalCard";
-import { initialEmployees, initialApprovals } from "../../sampleData";
+import { initialApprovals } from "../../sampleData";
+
+import {
+  fetchEmployees,
+  addEmployee,
+  updateEmployee as updateEmployeeAction,
+  deleteEmployee as deleteEmployeeAction,
+  selectEmployeesItems,
+  selectEmployeesStatus,
+} from "../../../store/slices/employeesSlice";
 
 const tabs = [
   { id: "all", label: "All Employees" },
@@ -16,34 +27,143 @@ const tabs = [
 ];
 
 export default function HRPage() {
+  const dispatch = useDispatch();
+
+  // tabs + animation
   const [activeTab, setActiveTab] = useState("all");
   const [animating, setAnimating] = useState(false);
   const [pendingTab, setPendingTab] = useState(null);
 
-  const [employees, setEmployees] = useState(initialEmployees);
+  // approvals local
   const [approvals, setApprovals] = useState(initialApprovals);
 
-  const [isAddOpen, setIsAddOpen] = useState(false);
+  // modal control
+  // modalMode: "create" | "edit" | "view"
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("create");
+  const [modalData, setModalData] = useState(null); // for edit/view
 
-  const openAdd = () => setIsAddOpen(true);
-  const closeAdd = () => setIsAddOpen(false);
+  // employees from redux
+  const employees = useSelector(selectEmployeesItems);
+  const employeesStatus = useSelector(selectEmployeesStatus);
 
-  const handleAddSubmit = (formData) => {
-    if (
-      !formData?.id?.toString().trim() ||
-      !formData?.name?.toString().trim()
-    ) {
-      return;
+  // fetch employees on first client render
+  useEffect(() => {
+    if (employeesStatus === "idle") {
+      dispatch(fetchEmployees());
     }
-    setEmployees((p) => [{ ...formData }, ...p]);
-    setIsAddOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // header add button handler
+  const openAdd = () => {
+    setModalMode("create");
+    setModalData(null);
+    setModalOpen(true);
+  };
+  const openView = (raw) => {
+    setModalMode("view");
+    setModalData(raw);
+    setModalOpen(true);
+  };
+  const openEdit = (raw) => {
+    setModalMode("edit");
+    setModalData(raw);
+    setModalOpen(true);
+  };
+  const closeModal = () => {
+    setModalOpen(false);
+    setModalData(null);
   };
 
-  const handleDeleteEmployee = (id) => {
+  // handle create: call API, dispatch redux add
+  const handleCreate = async (payload) => {
+    try {
+      const res = await fetch("/api/employees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Failed to create employee");
+      }
+      const created = await res.json();
+
+      const id = created.empId ?? created.id;
+      const name = `${created.firstName ?? ""} ${
+        created.lastName ?? ""
+      }`.trim();
+      const uiRow = {
+        id,
+        name,
+        email: created.email ?? "",
+        role: created.designation ?? "",
+        status: created.status ?? "Active",
+        __raw: created,
+      };
+
+      dispatch(addEmployee(uiRow));
+      closeModal();
+    } catch (err) {
+      alert("Create failed: " + (err?.message || err));
+      throw err;
+    }
+  };
+
+  // handle update (edit): call API, dispatch redux update
+  const handleEditSubmit = async (payload) => {
+    try {
+      const targetId = modalData?.__raw?.id ?? modalData?.id;
+      if (!targetId) throw new Error("Missing employee id for update");
+
+      const res = await fetch(`/api/employees/${targetId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Failed to update employee");
+      }
+      const updated = await res.json();
+
+      const id = updated.empId ?? updated.id;
+      const name = `${updated.firstName ?? ""} ${
+        updated.lastName ?? ""
+      }`.trim();
+      const uiRow = {
+        id,
+        name,
+        email: updated.email ?? "",
+        role: updated.designation ?? "",
+        status: updated.status ?? "Active",
+        __raw: updated,
+      };
+
+      dispatch(updateEmployeeAction(uiRow));
+      closeModal();
+    } catch (err) {
+      alert("Update failed: " + (err?.message || err));
+      throw err;
+    }
+  };
+
+  // delete handler (calls API optionally) — keeps local redux state too
+  const handleDeleteEmployee = async (id) => {
     if (!confirm("Delete employee " + id + "?")) return;
-    setEmployees((p) => p.filter((x) => x.id !== id));
+    try {
+      const row = employees.find((r) => r.id === id);
+      const serverId = row?.__raw?.id ?? id;
+      await fetch(`/api/employees/${serverId}`, { method: "DELETE" });
+    } catch (err) {
+      console.warn("Server delete failed:", err);
+    } finally {
+      dispatch(deleteEmployeeAction(id));
+    }
   };
 
+  // approvals handlers
   const handleApprove = (approvalId) => {
     setApprovals((p) =>
       p.map((a) => (a.id === approvalId ? { ...a, status: "Approved" } : a))
@@ -71,11 +191,30 @@ export default function HRPage() {
     }, 400);
   };
 
+  // EMPLOYEE COLUMNS — EmpID now renders as a clickable link which opens view modal
   const employeeColumns = [
     {
       key: "id",
-      label: "ID",
+      label: "EmpID",
       className: "px-5 py-3 text-left text-sm font-medium text-gray-700",
+      render: (row) => {
+        // prefer empId from raw if available
+        const empId =
+          row.id ??
+          row.empId ??
+          (row.__raw && (row.__raw.empId ?? row.__raw.id)) ??
+          "";
+        return (
+          <button
+            type="button"
+            onClick={() => openView(row.__raw ?? row)}
+            className="text-blue-600 hover:underline text-sm font-medium"
+            title="View employee details"
+          >
+            {empId}
+          </button>
+        );
+      },
     },
     {
       key: "name",
@@ -83,78 +222,28 @@ export default function HRPage() {
       className: "px-5 py-3 text-left text-sm font-semibold text-gray-900",
     },
     {
-      key: "email",
-      label: "Email",
-      className: "px-5 py-3 text-left text-sm text-gray-600",
-    },
-    {
       key: "role",
       label: "Role",
       className: "px-5 py-3 text-left text-sm text-gray-700",
     },
     {
-      key: "status",
-      label: "Status",
-      className: "px-5 py-3 text-left text-sm",
-      render: (row) => (
-        <span
-          className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold select-none ${
-            row.status === "Active"
-              ? "bg-green-100 text-green-800"
-              : "bg-yellow-100 text-yellow-800"
-          }`}
-        >
-          {row.status}
-        </span>
-      ),
-    },
-  ];
-
-  const addEmployeeFields = [
-    {
-      name: "id",
-      label: "Employee ID",
-      type: "text",
-      placeholder: "E005",
-      required: true,
-    },
-    {
-      name: "name",
-      label: "Name",
-      type: "text",
-      placeholder: "Full name",
-      required: true,
-    },
-    {
-      name: "email",
+      key: "email",
       label: "Email",
-      type: "email",
-      placeholder: "email@example.com",
+      className: "px-5 py-3 text-left text-sm text-gray-600",
     },
     {
-      name: "role",
-      label: "Role",
-      type: "text",
-      placeholder: "Role / Designation",
-    },
-    {
-      name: "status",
-      label: "Status",
-      type: "select",
-      placeholder: "Select status",
-      options: ["Active", "On Leave", "Inactive"],
-      defaultValue: "Active",
-      className: "md:col-span-2",
+      key: "mobile",
+      label: "Mobile",
+      className: "px-5 py-3 text-left text-sm text-gray-600",
     },
   ];
 
   return (
-    <div className="">
+    <div className="h-[93vh]">
       <Header employeeCount={employeeCount} onAdd={openAdd} />
 
       <div
         className="bg-white rounded-3xl shadow-xl border border-gray-200 p-4"
-        style={{ minHeight: "calc(100vh - 200px)" }}
       >
         <nav
           role="tablist"
@@ -209,15 +298,15 @@ export default function HRPage() {
             <section className="overflow-hidden rounded-xl border border-gray-200 shadow-inner">
               <div className="overflow-y-auto">
                 <CustomTable
+                  maxHeight="60vh"
                   columns={[...employeeColumns]}
                   data={employees}
                   rowKey="id"
                   actions={(row) => (
                     <EmployeeActions
                       row={row}
-                      onEdit={(r) =>
-                        alert(`Edit ${r.name} — implement edit later`)
-                      }
+                      onView={() => openView(row.__raw ?? row)}
+                      onEdit={() => openEdit(row.__raw ?? row)}
                       onDelete={(id) => handleDeleteEmployee(id)}
                     />
                   )}
@@ -249,15 +338,34 @@ export default function HRPage() {
         </div>
       </div>
 
+      {/* Modal: uses our generic CustomModalForm and EmployeeForm inside it */}
       <CustomModalForm
-        open={isAddOpen}
-        onCancel={closeAdd}
-        onSubmit={handleAddSubmit}
-        title="Add Employee"
-        submitLabel="Add Employee"
-        fields={addEmployeeFields}
-        initialData={{ status: "Active" }}
-      />
+        open={modalOpen}
+        onCancel={closeModal}
+        title={
+          modalMode === "create"
+            ? "Add Employee"
+            : modalMode === "edit"
+            ? "Edit Employee"
+            : "View Employee"
+        }
+        widthClass="max-w-4xl"
+      >
+        <EmployeeForm
+          mode={modalMode}
+          initialData={modalData?.__raw ?? modalData ?? {}}
+          onCancel={closeModal}
+          onSubmit={async (payload) => {
+            if (modalMode === "create") {
+              await handleCreate(payload);
+            } else if (modalMode === "edit") {
+              await handleEditSubmit(payload);
+            } else {
+              closeModal();
+            }
+          }}
+        />
+      </CustomModalForm>
     </div>
   );
 }
