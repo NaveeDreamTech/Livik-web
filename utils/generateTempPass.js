@@ -1,7 +1,4 @@
 // utils/generateTempPass.js
-// Client-side helper (browser) to generate a secure, human-friendly temp password.
-// Uses Web Crypto API for strong randomness.
-
 export function generateTempPass(length = 12) {
   const charset =
     "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*()-_=+";

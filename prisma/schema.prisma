@@ -28,6 +28,7 @@ model Employee {
   bloodGroup String?
   presentAddress String?
   permanentAddress String?
+  role String?
   designation String?
   department String?
   dateOfJoining DateTime?
