@@ -5,7 +5,7 @@ import StyledInput from "./StyledInput";
 import StyledButton from "./StyledButton";
 
 export default function LoginForm({ onForgot, onMobile }) {
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [form, setForm] = useState({ phoneNumber: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -17,6 +17,7 @@ export default function LoginForm({ onForgot, onMobile }) {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
+    console.log(form)
 
     try {
       const response = await fetch("/api/auth/login", {
@@ -56,9 +57,9 @@ export default function LoginForm({ onForgot, onMobile }) {
       )}
 
       <StyledInput
-        name="username"
+        name="phoneNumber"
         placeholder="Enter a Mobile Number"
-        value={form.username}
+        value={form.phoneNumber}
         onChange={handleChange}
         required
       />

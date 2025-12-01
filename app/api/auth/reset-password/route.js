@@ -31,8 +31,6 @@ export async function POST(req) {
       where: { id: user.id },
       data: {
         password: hashedPassword,
-        tempPasswordHash: null,
-        changedTempPassword: true,
       },
     });
 
