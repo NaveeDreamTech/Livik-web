@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import LoginForm from "./components/LoginForm";
 import ForgotPasswordModal from "./components/ForgotPasswordModal";
 import OtpModal from "./components/OtpModal";
@@ -10,11 +11,10 @@ import Image from "next/image";
 
 export default function LoginPage() {
   const [step, setStep] = useState("");
-  // "", "forgot", "otp", "reset", "success"
+  const router = useRouter(); // ✅ FIXED
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center relative ">
-      {/* Logo */}
+    <div className="min-h-screen w-full flex flex-col items-center justify-center relative">
       <div className="w-full max-w-[450px] text-center animate-fadeIn px-5">
         <div className="mb-6">
           <div className="w-[120px] h-[120px] rounded-full inline-flex items-center justify-center shadow-[0_8px_24px_rgba(0,0,0,0.2)] mb-4 overflow-hidden bg-white">
@@ -36,18 +36,22 @@ export default function LoginPage() {
 
           <LoginForm
             onForgot={() => setStep("forgot")}
-            onMobile={() => setStep("otp")}
+            onSuccess={() => {
+              console.log("Redirecting...");
+              router.push("/dashboard");
+            }}
           />
         </div>
       </div>
 
-      {/* FORGOT */}
+      {/* Forgot Modal */}
       <ForgotPasswordModal
         open={step === "forgot"}
-        onClose={(next) => {
-          if (next === "otp") setStep("otp");
-          else setStep("");
-        }}
+        // onClose={(next) => {
+        //   if (next === "otp") setStep("otp");
+        //   else setStep("");
+        // }}
+        onClose={() => setStep("")}
       />
 
       {/* OTP */}
@@ -59,7 +63,7 @@ export default function LoginPage() {
         }}
       />
 
-      {/* RESET PASSWORD */}
+      {/* Reset Password */}
       <ResetPasswordModal
         open={step === "reset"}
         onClose={(next) => {
@@ -68,7 +72,7 @@ export default function LoginPage() {
         }}
       />
 
-      {/* SUCCESS */}
+      {/* Success */}
       <SuccessModal open={step === "success"} onClose={() => setStep("")} />
     </div>
   );

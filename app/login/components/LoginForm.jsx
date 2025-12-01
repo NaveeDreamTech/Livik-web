@@ -4,7 +4,7 @@ import { useState } from "react";
 import StyledInput from "./StyledInput";
 import StyledButton from "./StyledButton";
 
-export default function LoginForm({ onForgot, onMobile }) {
+export default function LoginForm({ onForgot, onSuccess }) {
   const [form, setForm] = useState({ phoneNumber: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -17,7 +17,6 @@ export default function LoginForm({ onForgot, onMobile }) {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
-    console.log(form)
 
     try {
       const response = await fetch("/api/auth/login", {
@@ -29,18 +28,15 @@ export default function LoginForm({ onForgot, onMobile }) {
       const data = await response.json();
 
       if (!response.ok) {
-        setErrorMsg(data.message || "Login failed");
+        setErrorMsg(data.error || "Login failed");
         setLoading(false);
         return;
       }
 
-      // Store token if needed
-      // localStorage.setItem("token", data.token);
-
       console.log("LOGIN SUCCESS:", data);
 
-      // Move to homepage or dashboard
-      if (onMobile) onMobile(); // optional callback
+      // 🔥 ONLY THIS SHOULD RUN
+      if (onSuccess) onSuccess();
     } catch (err) {
       console.error(err);
       setErrorMsg("Something went wrong. Try again.");
@@ -51,14 +47,13 @@ export default function LoginForm({ onForgot, onMobile }) {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
-      {/* Error Message */}
       {errorMsg && (
         <p className="text-red-500 text-sm text-center">{errorMsg}</p>
       )}
 
       <StyledInput
         name="phoneNumber"
-        placeholder="Enter a Mobile Number"
+        placeholder="Enter Mobile Number"
         value={form.phoneNumber}
         onChange={handleChange}
         required
@@ -67,7 +62,7 @@ export default function LoginForm({ onForgot, onMobile }) {
       <StyledInput
         name="password"
         type="password"
-        placeholder="Enter a Password"
+        placeholder="Enter Password"
         value={form.password}
         onChange={handleChange}
         required
