@@ -145,7 +145,6 @@
 //   );
 // }
 
-
 "use client";
 
 import Link from "next/link";
@@ -209,10 +208,29 @@ export default function Sidebar() {
 
   const handleLogout = useCallback(async () => {
     try {
-      // 1️⃣ Firebase sign out using your initialized auth instance
-      await signOut(auth);
+      // 1️⃣ Call logout API to clear server-side token cookie
+      try {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (apiError) {
+        console.error("Logout API error:", apiError);
+        // Continue with client-side cleanup even if API fails
+      }
 
-      // 2️⃣ Clear local and session storage
+      // 2️⃣ Firebase sign out (if Firebase session exists)
+      try {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          await signOut(auth);
+        }
+      } catch (firebaseError) {
+        // Ignore Firebase errors - user might not have Firebase session
+        console.log("Firebase sign out skipped (no active session)");
+      }
+
+      // 3️⃣ Clear local and session storage
       try {
         localStorage.clear();
         sessionStorage.clear();
@@ -220,29 +238,34 @@ export default function Sidebar() {
         // ignore storage errors
       }
 
-      // 3️⃣ Delete all cookies (trim cookie names and set path=/)
-      // This will clear cookies set on path=/; if cookies were set with a specific domain or path,
-      // consider clearing those explicitly from your server side as well.
-      document.cookie.split(";").forEach((cookie) => {
-        const eqPos = cookie.indexOf("=");
-        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-        if (!name) return;
-        // expire cookie for different common scopes
-        document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
-        document.cookie = `${name}=; Path=/; Max-Age=0;`;
-      });
+      // 4️⃣ Clear cookies client-side as backup
+      try {
+        document.cookie.split(";").forEach((cookie) => {
+          const eqPos = cookie.indexOf("=");
+          const name =
+            eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          if (!name) return;
+          // Clear cookie with various path/domain combinations
+          document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+          document.cookie = `${name}=; Path=/; Max-Age=0;`;
+          document.cookie = `${name}=; Domain=${window.location.hostname}; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+        });
+      } catch (e) {
+        // ignore cookie errors
+      }
 
-      // 4️⃣ Redirect to login page (replace so back doesn't return)
+      // 5️⃣ Redirect to login page (replace so back doesn't return)
       router.replace("/login");
     } catch (error) {
       console.error("Logout failed:", error);
-      // attempt cleanup & redirect even if signOut fails
+      // Force cleanup & redirect even if everything fails
       try {
         localStorage.clear();
         sessionStorage.clear();
         document.cookie.split(";").forEach((cookie) => {
           const eqPos = cookie.indexOf("=");
-          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          const name =
+            eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
           if (!name) return;
           document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
           document.cookie = `${name}=; Path=/; Max-Age=0;`;

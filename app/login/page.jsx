@@ -36,6 +36,7 @@ export default function LoginPage() {
 
           <LoginForm
             onForgot={() => setStep("forgot")}
+            onLoginWithMobile={() => setStep("forgot")}
             onSuccess={() => {
               console.log("Redirecting...");
               router.push("/dashboard");
@@ -47,11 +48,10 @@ export default function LoginPage() {
       {/* Forgot Modal */}
       <ForgotPasswordModal
         open={step === "forgot"}
-        // onClose={(next) => {
-        //   if (next === "otp") setStep("otp");
-        //   else setStep("");
-        // }}
-        onClose={() => setStep("")}
+        onClose={(next) => {
+          if (next === "otp") setStep("otp");
+          else setStep("");
+        }}
       />
 
       {/* OTP */}
@@ -59,7 +59,21 @@ export default function LoginPage() {
         open={step === "otp"}
         onClose={(next) => {
           if (next === "reset") setStep("reset");
-          else setStep("");
+          else if (next === "dashboard") {
+            router.push("/dashboard");
+            setStep("");
+          } else setStep("");
+        }}
+        onPasswordExists={(user) => {
+          // Password exists, route to dashboard
+          console.log("Password exists, routing to dashboard");
+          router.push("/dashboard");
+          setStep("");
+        }}
+        onPasswordNotExists={() => {
+          // Password doesn't exist, open reset password modal
+          console.log("Password doesn't exist, opening reset password modal");
+          setStep("reset");
         }}
       />
 

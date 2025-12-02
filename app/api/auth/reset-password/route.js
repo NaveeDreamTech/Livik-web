@@ -34,10 +34,28 @@ export async function POST(req) {
       },
     });
 
-    return NextResponse.json({
+    // Create response
+    const response = NextResponse.json({
       success: true,
       message: "Password reset successful",
+      user: {
+        id: user.id,
+        empId: user.empId,
+        phoneNumber: user.phoneNumber,
+      },
     });
+
+    // Set authentication token cookie (user has verified via OTP and set password)
+    const token = Buffer.from(`${user.id}:${Date.now()}`).toString("base64");
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/",
+    });
+
+    return response;
   } catch (err) {
     console.error("RESET PASSWORD ERROR:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

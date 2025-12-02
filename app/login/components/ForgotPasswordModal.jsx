@@ -41,7 +41,7 @@ export default function ForgotPasswordModal({ open, onClose }) {
       onClose("otp");
     } catch (err) {
       console.error("RESET PASSWORD ERROR FULL:", err);
-      return NextResponse.json({ error: "Server error" }, { status: 500 });
+      setError(err.message || "Failed to send OTP. Please try again.");
     }
   };
 

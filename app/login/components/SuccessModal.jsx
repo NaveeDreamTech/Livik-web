@@ -1,3 +1,5 @@
+"use client";
+
 import { Dialog, DialogContent } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
@@ -5,9 +7,9 @@ import { X } from "lucide-react";
 export default function SuccessModal({ open, onClose = () => {} }) {
   const router = useRouter();
 
-  const goToLogin = () => {
-    onClose(); // SAFE (always a function)
-    router.push("/login");
+  const goToDashboard = () => {
+    onClose();
+    router.push("/dashboard");
   };
 
   return (
@@ -26,9 +28,9 @@ export default function SuccessModal({ open, onClose = () => {} }) {
 
         <button
           className="bg-blue-600 text-white py-2 px-6 rounded-lg"
-          onClick={goToLogin}
+          onClick={goToDashboard}
         >
-          Go to Login
+          Go to Dashboard
         </button>
       </DialogContent>
     </Dialog>

@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import StyledInput from "./StyledInput";
 import StyledButton from "./StyledButton";
 
-export default function LoginForm({ onForgot, onSuccess }) {
+export default function LoginForm({ onForgot, onSuccess, onLoginWithMobile }) {
   const [form, setForm] = useState({ phoneNumber: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
@@ -59,20 +61,38 @@ export default function LoginForm({ onForgot, onSuccess }) {
         required
       />
 
-      <StyledInput
-        name="password"
-        type="password"
-        placeholder="Enter Password"
-        value={form.password}
-        onChange={handleChange}
-        required
-      />
+      <div className="relative">
+        <StyledInput
+          name="password"
+          type={showPassword ? "text" : "password"}
+          placeholder="Enter Password"
+          value={form.password}
+          onChange={handleChange}
+          required
+          className="pr-12"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+          aria-label={showPassword ? "Hide password" : "Show password"}
+        >
+          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+        </button>
+      </div>
 
       <StyledButton type="submit" disabled={loading}>
         {loading ? "Logging in..." : "Login"}
       </StyledButton>
 
-      <div className="flex items-center justify-center">
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onLoginWithMobile}
+          className="text-[14px] text-[#1E90FF] underline"
+        >
+          Login with Mobile
+        </button>
         <button
           type="button"
           onClick={onForgot}
